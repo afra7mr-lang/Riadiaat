@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 تحدي عبقريات الرياضيات</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Tajawal', sans-serif; }
+  html, body { height:100%; overflow:hidden; }
+  body {
+    background: linear-gradient(135deg, #2a0a5e 0%, #1a1a8a 35%, #4b0082 70%, #0f3460 100%);
+    color:#fff; height:100vh; position:relative;
+  }
+  .bg-symbols { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden; }
+  .bg-symbols span {
+    position:absolute; color:rgba(255,255,255,0.08);
+    font-size:3rem; font-weight:900;
+    animation: float 18s linear infinite;
+  }
+  @keyframes float {
+    0% { transform: translateY(100vh) rotate(0deg); opacity:0; }
+    10% { opacity:1; } 90% { opacity:1; }
+    100% { transform: translateY(-100vh) rotate(360deg); opacity:0; }
+  }
+  .container { position:relative; z-index:2; height:100vh; width:100vw; display:flex; flex-direction:column; }
+  .screen { display:none; height:100%; animation: fadeIn 0.6s ease; }
+  .screen.active { display:flex; }
+  @keyframes fadeIn { from { opacity:0; transform: scale(0.98); } to { opacity:1; transform: scale(1); } }
+
+  #nameScreen { flex-direction: row; align-items: center; justify-content: center; padding: 30px; gap: 40px; }
+  .name-visual { flex: 1; max-width: 400px; text-align:center; font-size: 9rem; animation: bounce 2s infinite; }
+  @keyframes bounce { 0%,100% { transform: translateY(0) rotate(-5deg); } 50% { transform: translateY(-15px) rotate(5deg); } }
+  .name-box {
+    flex: 1; max-width: 500px; text-align:center; padding: 40px;
+    background: rgba(255,255,255,0.08); backdrop-filter: blur(15px);
+    border-radius: 30px; border: 2px solid rgba(255,255,255,0.15);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  }
+  .name-box h2 {
+    font-size: 2.2rem; margin-bottom: 15px;
+    background: linear-gradient(90deg, #ff6ec7, #ffd700, #00e5ff);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color: transparent;
+    font-weight:900;
+  }
+  .name-box p { font-size: 1.1rem; color:#e0e0ff; margin-bottom: 25px; line-height:1.7; }
+  .name-box .question-counter {
+    display:inline-block; padding: 8px 20px;
+    background: rgba(255,215,0,0.15); border: 1px solid rgba(255,215,0,0.3);
+    border-radius: 50px; color:#ffd700; font-weight:700;
+    margin-bottom: 20px; font-size: 1rem;
+  }
+  .name-input {
+    width: 100%; padding: 18px 25px; font-size: 1.3rem; font-weight:700;
+    background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.25);
+    border-radius: 50px; color:#fff; text-align:center; font-family: inherit;
+    transition: all 0.3s; margin-bottom: 20px;
+  }
+  .name-input::placeholder { color: rgba(255,255,255,0.5); }
+  .name-input:focus { outline:none; border-color: #ffd700; box-shadow: 0 0 25px rgba(255,215,0,0.4); }
+  .name-error { color: #ff6b9d; font-size: 0.95rem; margin-bottom: 15px; min-height: 20px; }
+
+  .btn {
+    display:inline-block; padding: 18px 50px; font-size: 1.3rem; font-weight:900;
+    color:#fff; cursor:pointer; border:none;
+    background: linear-gradient(135deg, #ff006e, #8338ec, #3a86ff);
+    background-size: 200% 200%; border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(131,56,236,0.5), inset 0 0 0 2px rgba(255,255,255,0.2);
+    transition: all 0.3s; font-family: inherit;
+  }
+  .btn:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 15px 40px rgba(255,0,110,0.6); }
+  .btn:active { transform: scale(0.98); }
+  .btn-secondary { background: linear-gradient(135deg, #00e5ff, #00b4d8); box-shadow: 0 10px 30px rgba(0,229,255,0.4); }
+
+  #customQuestionScreen { flex-direction: column; align-items: center; justify-content: center; padding: 30px; overflow-y:auto; }
+  .custom-q-box {
+    max-width: 750px; width:100%; text-align:center; padding: 35px;
+    background: rgba(255,255,255,0.08); backdrop-filter: blur(15px);
+    border-radius: 30px; border: 2px solid rgba(255,215,0,0.3);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn { 0% { opacity:0; transform: scale(0.8); } 100% { opacity:1; transform: scale(1); } }
+  .custom-q-box .emoji { font-size: 4.5rem; margin-bottom: 15px; animation: bounce 2s infinite; }
+  .custom-q-box h2 { font-size: 1.7rem; margin-bottom: 12px; color:#ffd700; font-weight:900; }
+  .custom-q-box .player-name-display {
+    font-size: 1.5rem; color:#ff6ec7; margin-bottom: 18px;
+    text-shadow: 0 0 15px rgba(255,110,199,0.5); font-weight:900;
+  }
+  .custom-q-box .question-text {
+    font-size: 1.25rem; line-height: 1.8; padding: 20px;
+    background: rgba(0,0,0,0.25); border-radius: 15px;
+    border-right: 5px solid #ffd700; margin-bottom: 20px;
+  }
+  .custom-q-box .question-text .math {
+    font-family: 'Cambria Math', 'Times New Roman', serif;
+    color: #ffd700; font-weight:bold; font-size: 1.15em;
+  }
+  .custom-q-box .lesson-tag {
+    display:inline-block; padding: 5px 15px;
+    background: rgba(0,229,255,0.15); border: 1px solid rgba(0,229,255,0.3);
+    border-radius: 50px; color:#00e5ff; font-size: 0.85rem;
+    margin-bottom: 15px; font-weight:700;
+  }
+  .custom-options { display:grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 18px; }
+  .custom-option {
+    padding: 15px 18px; background: rgba(255,255,255,0.1);
+    border: 2px solid rgba(255,255,255,0.2); border-radius: 15px;
+    cursor:pointer; font-size: 1.05rem; font-weight:700;
+    transition: all 0.3s; font-family: inherit; color:#fff;
+  }
+  .custom-option:hover { background: rgba(255,255,255,0.2); border-color: #ffd700; transform: scale(1.05); }
+  .custom-option.selected { background: linear-gradient(135deg, rgba(0,200,100,0.4), rgba(0,255,150,0.2)); border-color: #00ff88; }
+  .custom-option.wrong-pick { background: linear-gradient(135deg, rgba(255,0,100,0.4), rgba(255,50,50,0.2)); border-color: #ff3366; }
+  .custom-feedback {
+    margin-top: 18px; padding: 18px 20px;
+    border-radius: 15px; font-size: 1.1rem; display:none;
+    line-height: 1.7;
+  }
+  .custom-feedback.show { display:block; animation: popIn 0.5s; }
+  .custom-feedback.correct { background: rgba(0,200,100,0.25); border: 2px solid #00ff88; color:#b8ffd9; }
+  .custom-feedback.wrong { background: rgba(255,0,100,0.25); border: 2px solid #ff6b9d; color:#ffd1e0; }
+  .custom-feedback .main-msg { font-size: 1.2rem; font-weight:900; margin-bottom: 8px; display:block; }
+  .custom-feedback .explain { font-size: 0.95rem; opacity: 0.95; }
+
+  #finalScreen { flex-direction: column; align-items: center; justify-content: center; padding: 30px; overflow-y:auto; }
+  .final-box {
+    max-width: 850px; width:100%; text-align:center; padding: 40px;
+    background: rgba(255,255,255,0.1); backdrop-filter: blur(20px);
+    border-radius: 30px; border: 2px solid rgba(255,215,0,0.4);
+  }
+  .trophy { font-size: 7rem; animation: bounce 1.5s infinite; }
+  .final-title {
+    font-size: 2.5rem; margin: 20px 0;
+    background: linear-gradient(90deg, #ffd700, #ff6ec7);
+    -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color: transparent;
+    font-weight:900;
+  }
+  .stats-grid { display:flex; gap: 20px; margin: 30px 0; justify-content:center; flex-wrap:wrap; }
+  .stat-card {
+    background: rgba(0,0,0,0.3); padding: 25px 30px; border-radius: 15px;
+    border: 1px solid rgba(255,255,255,0.15); min-width: 150px;
+  }
+  .stat-card .num { font-size: 3rem; font-weight:900; color:#ffd700; }
+  .stat-card .label { font-size:1rem; color:#e0e0ff; margin-top: 5px; }
+  .students-list {
+    margin: 30px 0; padding: 20px;
+    background: rgba(0,0,0,0.2); border-radius: 15px;
+    max-height: 350px; overflow-y:auto;
+  }
+  .students-list h3 { color:#ffd700; margin-bottom: 15px; font-size: 1.3rem; }
+  .student-item {
+    display:flex; justify-content:space-between; align-items:center;
+    padding: 10px 15px; margin: 8px 0;
+    background: rgba(255,255,255,0.05); border-radius: 10px;
+  }
+  .student-item.correct { border-right: 4px solid #00ff88; }
+  .student-item.wrong { border-right: 4px solid #ff6b9d; }
+  .student-item .name { font-weight:700; }
+  .student-item .result { font-size: 1.2rem; }
+  .thank-you {
+    margin-top: 25px; font-size: 1.1rem; padding: 20px;
+    background: rgba(255,255,255,0.1); border-radius: 15px; line-height: 1.8;
+  }
+
+  .confetti { position:fixed; width:10px; height:10px; pointer-events:none; z-index:9999; animation: confettiFall 3s linear forwards; }
+  @keyframes confettiFall { 0% { transform: translateY(-100vh) rotate(0deg); opacity:1; } 100% { transform: translateY(100vh) rotate(720deg); opacity:0; } }
+
+  @media (max-width: 900px) {
+    html, body { overflow-y:auto; height:auto; }
+    .container { height:auto; min-height:100vh; }
+    .screen.active { flex-direction: column !important; height:auto; min-height:100vh; padding: 20px !important; }
+    .name-visual { font-size: 5rem; }
+    .custom-options { grid-template-columns: 1fr; }
+    .name-box, .custom-q-box, .final-box { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-symbols" id="bgSymbols"></div>
+
+<div class="container">
+
+  <div class="screen active" id="nameScreen">
+    <div class="name-visual">🧮</div>
+    <div class="name-box">
+      <h2>✨ سؤال جديد لطالبة جديدة ✨</h2>
+      <div class="question-counter" id="questionCounter">السؤال 1 من 36</div>
+      <p>أخبرينا عن اسمك لتحدي خاص بكِ! 🌟<br><small style="color:#00e5ff;">المصفوفات • كثيرات الحدود</small></p>
+      <input type="text" class="name-input" id="nameInput" placeholder="اكتبي اسمك هنا..." maxlength="25" autocomplete="off">
+      <div class="name-error" id="nameError"></div>
+      <button class="btn" id="submitNameBtn">هيا نبدأ! 🚀</button>
+    </div>
+  </div>
+
+  <div class="screen" id="customQuestionScreen">
+    <div class="custom-q-box">
+      <div class="emoji">🎁</div>
+      <h2>سؤال خاص بكِ فقط!</h2>
+      <div class="player-name-display" id="customPlayerName">—</div>
+      <div class="lesson-tag" id="lessonTag">الدرس</div>
+      <div class="question-text" id="customQuestionText">—</div>
+      <div class="custom-options" id="customOptions"></div>
+      <div class="custom-feedback" id="customFeedback"></div>
+      <button class="btn btn-secondary" id="continueBtn" style="display:none;">الطالبة التالية ←</button>
+    </div>
+  </div>
+
+  <div class="screen" id="finalScreen">
+    <div class="final-box">
+      <div class="trophy">🏆</div>
+      <div class="final-title">انتهى التحدي!</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="num" id="finalCorrect">0</div><div class="label">إجابات صحيحة ✅</div></div>
+        <div class="stat-card"><div class="num" id="finalWrong">0</div><div class="label">إجابات خاطئة ❌</div></div>
+        <div class="stat-card"><div class="num" id="finalPercent">0%</div><div class="label">النسبة النهائية</div></div>
+      </div>
+      <div class="students-list" id="studentsList">
+        <h3>📋 قائمة الطالبات</h3>
+      </div>
+      <div class="thank-you">
+        🌟 شكرًا لكن جميعًا على المشاركة في <b>تحدي عبقريات الرياضيات</b> 🌟<br>
+        <small>إعداد المعلمة: سارة آل معجبه</small>
+      </div>
+      <br>
+      <button class="btn" id="restartBtn">🔄 إعادة التحدي</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============ رموز الخلفية ============ */
+const symbols = ['π','√','∞','∑','∫','Δ','θ','φ','±','≈','≠','∝','α','β','λ','μ','∂','∇'];
+const bgBox = document.getElementById('bgSymbols');
+for (let i=0; i<25; i++) {
+  const s = document.createElement('span');
+  s.textContent = symbols[Math.floor(Math.random()*symbols.length)];
+  s.style.left = Math.random()*100 + '%';
+  s.style.fontSize = (2 + Math.random()*3) + 'rem';
+  s.style.animationDuration = (12 + Math.random()*15) + 's';
+  s.style.animationDelay = (Math.random()*10) + 's';
+  bgBox.appendChild(s);
+}
+
+/* ============ الأصوات ============ */
+let audioCtx;
+function initAudio() {
+  if (!audioCtx) {
+    try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  }
+}
+function playTone(freq, duration, type='sine', vol=0.2) {
+  try {
+    initAudio();
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type; osc.frequency.value = freq;
+    gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    osc.start(); osc.stop(audioCtx.currentTime + duration);
+  } catch(e){}
+}
+function soundCorrect() {
+  playTone(523, 0.15, 'sine', 0.25);
+  setTimeout(()=>playTone(659, 0.15, 'sine', 0.25), 120);
+  setTimeout(()=>playTone(784, 0.25, 'sine', 0.25), 240);
+}
+function soundWrong() {
+  playTone(220, 0.2, 'sawtooth', 0.15);
+  setTimeout(()=>playTone(180, 0.3, 'sawtooth', 0.15), 150);
+}
+function soundClick() { playTone(800, 0.05, 'square', 0.1); }
+function soundWin() {
+  [523, 659, 784, 1047].forEach((n,i)=> setTimeout(()=>playTone(n, 0.2, 'sine', 0.25), i*150));
+}
+function soundType() { playTone(600 + Math.random()*200, 0.03, 'square', 0.05); }
+
+/* ============ الكونفيتي ============ */
+function fireConfetti(count=60) {
+  const colors = ['#ff006e','#ffd700','#00e5ff','#8338ec','#00ff88','#ff6ec7'];
+  for (let i=0; i<count; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.left = Math.random()*100 + 'vw';
+    c.style.background = colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration = (2 + Math.random()*2) + 's';
+    c.style.animationDelay = Math.random()*0.5 + 's';
+    if (Math.random() > 0.5) c.style.borderRadius = '50%';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(), 4000);
+  }
+}
+
+/* ============ عبارات المدح ============ */
+const praisePhrases = [
+  (n) => `🌟 يا ${n}! عقلك الرياضي يلمع كنجوم السماء! 🌟`,
+  (n) => `🧠 ${n} العبقرية! جوابك كان أسرع من الآلة الحاسبة! 🚀`,
+  (n) => `✨ والله يا ${n} إنك عبقرية رياضيات حقيقية! ✨`,
+  (n) => `💫 ${n}! أنتِ برهان حي على أن الرياضيات سهلة! 💫`,
+  (n) => `👑 ما شاء الله يا ${n}! إجابة تجعل أويلر فخورًا بكِ! 👑`,
+  (n) => `⭐ ${n} النجمة! تملكين عقلًا رياضيًا خارقًا! ⭐`,
+  (n) => `🎯 يا ${n}! جوابك كان كالسحر تمامًا! 🎯`,
+  (n) => `😎 ${n}! أنتِ لستِ طالبة، أنتِ أستاذة رياضيات متنكرة! 😎`,
+  (n) => `😊 ${n}! إجابتك الصحيحة جعلت π يبتسم لكِ! 😊`,
+  (n) => `👸 يا ${n}! أنتِ ملكة المعادلات بلا منازع! 👸`,
+  (n) => `🔥 ${n}! أنتِ تشعلين الفصل بذكائك! 🔥`,
+  (n) => `💎 يا ${n}! إجابة ثمينة كالألماس! 💎`,
+  (n) => `🏆 ${n}! هذا جواب البطلة الحقيقية! 🏆`,
+  (n) => `🌸 يا ${n}! ذكاؤك يزهو كزهرة الربيع! 🌸`,
+  (n) => `⚡ ${n}! سرعة بديهتكِ صاعقة! ⚡`,
+  (n) => `🌈 ${n}! إجابة ملونة كقوس قزح! 🌈`,
+  (n) => `🎨 ${n}! حلّك كان فنيًا كاللوحة! 🎨`,
+  (n) => `🎪 يا ${n}! أنتِ نجمة السيرك الرياضي! 🎪`,
+  (n) => `🦋 ${n}! إجابتك حلّقت عاليا كالفراشة! 🦋`,
+  (n) => `🌺 ${n}! تألقتِ كالزهرة في بستان الرياضيات! 🌺`,
+  (n) => `💖 ${n}! جوابك أسعد قلوبنا جميعًا! 💖`,
+  (n) => `🎓 ${n}! هذا تفوق يستحق التصفيق! 👏`,
+  (n) => `✨ ${n}! أنتِ مصدر إلهام لكل طالبات الفصل! ✨`,
+  (n) => `🌙 ${n}! تألقتِ كقمر ليلة كاملة! 🌙`
+];
+
+/* ============ عبارات مضحكة ============ */
+const funnyPhrases = [
+  (n) => `😅 يا ${n}! لا تقلقي، حتى أينشتاين أخطأ يومًا... لكن ليس بهذا الشكل! 😄`,
+  (n) => `🤭 ${n}! يبدو أن الآلة الحاسبة أخذت إجازة اليوم! 🧮`,
+  (n) => `🙈 يا ${n}! هذا السؤال كان فخًا... وأنتِ وقعتِ فيه بكل أناقة! 🕳️`,
+  (n) => `😂 ${n}! لا بأس، الأخطاء هي توابل النجاح... لكن قلّلي التوابل! 🌶️`,
+  (n) => `🤪 يا ${n}! الرياضيات صعبة، لكنك أقوى... نظريًا على الأقل! 💪`,
+  (n) => `😜 ${n}! حتى نيوتن سقط من الشجرة قبل أن يكتشف الجاذبية! 🍎`,
+  (n) => `🫣 يا ${n}! لا تحزني، سنخبر المعلمة أنكِ كنتِ تختبريننا! 😜`,
+  (n) => `😆 ${n}! الرياضيات ليست صعبة، هي فقط تلعب معكِ لعبة الغميضة! 🎲`,
+  (n) => `🤗 يا ${n}! إجابة خاطئة واحدة لن توقف عبقريتكِ الكبيرة! 🚀`,
+  (n) => `😹 ${n}! السؤال كان يضحك في سرّه، لكنكِ ستنتقمين منه! 😼`,
+  (n) => `🥲 يا ${n}! هذا خطأ صغير في طريق عبقريتكِ الكبيرة! 🛤️`,
+  (n) => `😅 ${n}! لا بأس، حتى القمر له جانب مظلم! 🌙`,
+  (n) => `🤭 يا ${n}! السؤال كان صعبًا، لكنكِ أقوى منه... غدًا! 🌅`,
+  (n) => `😂 ${n}! لا تقلقي، الضحك على الأخطاء رياضة مفيدة! 🤸`,
+  (n) => `🙃 يا ${n}! الأخطاء هي الطريقة التي يخبرنا بها الدماغ أنه يتعلم! 🧠`,
+  (n) => `😆 ${n}! هذه الإجابة ستدخل موسوعة المواقف الطريفة! 📚`,
+  (n) => `🤪 يا ${n}! الفصل يحتاج لمساتك المرحة حتى في الأخطاء! 🎭`,
+  (n) => `😜 ${n}! لا بأس، المحاولة نصف النجاح... والنصف الآخر القهوة! ☕`,
+  (n) => `😹 ${n}! السؤال ضحك عليكِ، لكن المرة القادمة أنتِ من ستضحكين! 😄`,
+  (n) => `🤭 ${n}! لو كان الخطأ ذهبًا لكنتِ أغنى طالبة! 💰`,
+  (n) => `😅 ${n}! السؤال كان يختبر صبرك، واجتزتِ الاختبار بشرف! 🏅`,
+  (n) => `🙈 يا ${n}! الإجابة الصحيحة كانت مختبئة وراءك! 🕵️‍♀️`,
+  (n) => `😂 ${n}! لا بأس، حتى العباقرة يحتاجون لمحو أخطاءهم! 🧽`,
+  (n) => `🤗 ${n}! ضحكتنا اليوم بسببكِ لن تُنسى! 😄`
+];
+
+/* ============ 36 سؤال من الدروس المحددة فقط ============ */
+const allQuestions = [
+  // ===== 2-1 مقدمة في المصفوفات (7 أسئلة) =====
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'ما رتبة المصفوفة <span class="math">A = [2  5  1; 3  4  7]</span>؟', options: ['2 × 2', '2 × 3', '3 × 2', '3 × 3'], answer: 1, explain: 'رتبة المصفوفة = عدد الصفوف × عدد الأعمدة = 2 × 3.' },
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'ما العنصر <span class="math">a₂₃</span> في المصفوفة <span class="math">[1  4  7; 2  5  9]</span>؟', options: ['4', '5', '7', '9'], answer: 1, explain: 'العنصر a₂₃ يقع في الصف الثاني والعمود الثالث، وهو 5.' },
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'متى تتساوى مصفوفتان؟', options: ['عند تساوي رتبتيهما فقط', 'عند تساوي العناصر المتناظرة فقط', 'عند تساوي رتبتيهما والعناصر المتناظرة', 'عند تساوي عدد عناصرهما'], answer: 2, explain: 'تتساوى مصفوفتان إذا كانت لهما نفس الرتبة وكانت العناصر المتناظرة متساوية.' },
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'ما رتبة المصفوفة المنقولة للمصفوفة <span class="math">[1  2; 3  4; 5  6]</span>؟', options: ['2 × 3', '3 × 2', '3 × 3', '2 × 2'], answer: 0, explain: 'المنقولة تبدل الصفوف بالأعمدة، فتصبح رتبتها 2×3 بدلاً من 3×2.' },
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'أيّ من المصفوفات التالية تُعدّ مصفوفة صفرية من الرتبة 2×2؟', options: ['[1 1; 1 1]', '[0 0; 0 0]', '[1 0; 0 1]', '[2 2; 2 2]'], answer: 1, explain: 'المصفوفة الصفرية جميع عناصرها أصفار.' },
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'المصفوفة <span class="math">[3  1; 5  2]</span> تُصنَّف على أنها:', options: ['مصفوفة صفرية', 'مصفوفة مستطيلة', 'مصفوفة مربعة', 'مصفوفة وحدة'], answer: 2, explain: 'مصفوفة مربعة لأن عدد صفوفها = عدد أعمدتها = 2.' },
+  { lesson: '2-1 مقدمة في المصفوفات', question: 'ما العنصر <span class="math">a₁₂</span> في المصفوفة <span class="math">[8  3; 6  4]</span>؟', options: ['8', '3', '6', '4'], answer: 1, explain: 'العنصر a₁₂ يقع في الصف الأول والعمود الثاني، وهو 3.' },
+
+  // ===== 2-2 العمليات على المصفوفات (7 أسئلة) =====
+  { lesson: '2-2 العمليات على المصفوفات', question: 'ما ناتج جمع المصفوفتين <span class="math">[1  2; 3  4]</span> و <span class="math">[5  6; 7  8]</span>؟', options: ['[6  8; 10  12]', '[5  12; 21  32]', '[4  4; 4  4]', '[1  2; 3  4]'], answer: 0, explain: 'نجمع العناصر المتناظرة: 1+5=6، 2+6=8، 3+7=10، 4+8=12.' },
+  { lesson: '2-2 العمليات على المصفوفات', question: 'ما ناتج <span class="math">3 × [2  4; 1  5]</span>؟', options: ['[6  12; 3  15]', '[5  7; 4  8]', '[2  4; 1  5]', '[6  4; 3  5]'], answer: 0, explain: 'نضرب كل عنصر في 3: 3×2=6، 3×4=12، 3×1=3، 3×5=15.' },
+  { lesson: '2-2 العمليات على المصفوفات', question: 'ما شرط جمع مصفوفتين؟', options: ['أن يكون لهما نفس عدد الصفوف', 'أن يكون لهما نفس عدد الأعمدة', 'أن يكون لهما نفس الرتبة', 'أي مصفوفتين يمكن جمعهما'], answer: 2, explain: 'لا يمكن جمع مصفوفتين إلا إذا كانت لهما نفس الرتبة.' },
+  { lesson: '2-2 العمليات على المصفوفات', question: 'ما ناتج <span class="math">[10  20; 30  40] - [3  5; 7  9]</span>؟', options: ['[7  15; 23  31]', '[13  25; 37  49]', '[7  5; 3  1]', '[3  4; 4  4]'], answer: 0, explain: 'نطرح العناصر المتناظرة: 10-3=7، 20-5=15، 30-7=23، 40-9=31.' },
+  { lesson: '2-2 العمليات على المصفوفات', question: 'هل جمع المصفوفات عملية تبديلية؟ أي هل A + B = B + A؟', options: ['نعم دائمًا', 'لا أبدًا', 'نعم إذا كانتا مربعتين', 'لا أعرف'], answer: 0, explain: 'جمع المصفوفات تبديلي دائمًا، لأن جمع الأعداد تبديلي.' },
+  { lesson: '2-2 العمليات على المصفوفات', question: 'ما ناتج <span class="math">[4  6; 8  10] + [0  0; 0  0]</span>؟', options: ['[0  0; 0  0]', '[4  6; 8  10]', '[4  6; 0  0]', '[8  12; 16  20]'], answer: 1, explain: 'المصفوفة الصفرية هي العنصر المحايد في الجمع، فلا تغيّر المصفوفة.' },
+  { lesson: '2-2 العمليات على المصفوفات', question: 'ما ناتج <span class="math">-1 × [3  5; 7  9]</span>؟', options: ['[-3  -5; -7  -9]', '[3  5; 7  9]', '[-3  5; -7  9]', '[1/3  1/5; 1/7  1/9]'], answer: 0, explain: 'نضرب كل عنصر في -1: -3, -5, -7, -9.' },
+
+  // ===== 2-3 ضرب المصفوفات (8 أسئلة) =====
+  { lesson: '2-3 ضرب المصفوفات', question: 'ما شرط ضرب المصفوفة A في المصفوفة B؟', options: ['أن يكون لهما نفس الرتبة', 'أن يكون عدد أعمدة A = عدد صفوف B', 'أن يكون عدد صفوف A = عدد أعمدة B', 'أي مصفوفتين يمكن ضربهما'], answer: 1, explain: 'شرط الضرب: عدد أعمدة المصفوفة الأولى = عدد صفوف المصفوفة الثانية.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'إذا كانت A من الرتبة 2×3 و B من الرتبة 3×4، فما رتبة الناتج AB؟', options: ['2×3', '3×4', '2×4', '3×3'], answer: 2, explain: 'رتبة الناتج = (عدد صفوف A) × (عدد أعمدة B) = 2 × 4.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'ما مصفوفة الوحدة من الرتبة 2×2؟', options: ['[0  0; 0  0]', '[1  1; 1  1]', '[1  0; 0  1]', '[2  0; 0  2]'], answer: 2, explain: 'مصفوفة الوحدة I₂ = [1 0; 0 1]، عناصر القطر الرئيسي 1 والباقي 0.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'هل ضرب المصفوفات عملية تبديلية؟ أي هل AB = BA دائمًا؟', options: ['نعم دائمًا', 'لا، ليس تبديليًا بشكل عام', 'نعم إذا كانتا مربعتين', 'لا أعرف'], answer: 1, explain: 'ضرب المصفوفات ليس تبديليًا بشكل عام، فـ AB ≠ BA في معظم الحالات.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'ما ناتج ضرب مصفوفة A في مصفوفة الوحدة I؟', options: ['مصفوفة صفرية', 'مصفوفة A نفسها', 'مصفوفة الوحدة', 'مصفوفة منقولة'], answer: 1, explain: 'AI = IA = A، مصفوفة الوحدة هي العنصر المحايد في الضرب.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'ما ناتج <span class="math">[1  2; 3  4] × [1  0; 0  1]</span>؟', options: ['[0  0; 0  0]', '[1  2; 3  4]', '[1  0; 0  1]', '[4  3; 2  1]'], answer: 1, explain: 'الضرب في مصفوفة الوحدة يعطي المصفوفة نفسها.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'ما رتبة ناتج ضرب مصفوفة 4×2 في مصفوفة 2×5؟', options: ['4×5', '2×2', '4×2', '2×5'], answer: 0, explain: 'رتبة الناتج = (صفوف الأولى) × (أعمدة الثانية) = 4 × 5.' },
+  { lesson: '2-3 ضرب المصفوفات', question: 'ما ناتج <span class="math">[2  0; 0  2] × [3  1; 4  5]</span>؟', options: ['[6  2; 8  10]', '[5  1; 4  7]', '[6  0; 0  10]', '[2  0; 0  2]'], answer: 0, explain: 'نضرب كل عنصر في 2: 2×3=6، 2×1=2، 2×4=8، 2×5=10.' },
+
+  // ===== 3-2 القانون العام والمميز (7 أسئلة) =====
+  { lesson: '3-2 القانون العام والمميز', question: 'ما المميز للمعادلة <span class="math">x² - 5x + 6 = 0</span>؟', options: ['1', '-1', '25', '36'], answer: 0, explain: 'المميز = b² - 4ac = 25 - 4(1)(6) = 25 - 24 = 1.' },
+  { lesson: '3-2 القانون العام والمميز', question: 'إذا كان المميز = 0، فكم عدد جذور المعادلة التربيعية؟', options: ['لا جذور', 'جذر حقيقي واحد مكرر', 'جذران حقيقيان مختلفان', 'جذران مركبان'], answer: 1, explain: 'عندما يكون المميز = 0، يكون للمعادلة جذر حقيقي واحد مكرر.' },
+  { lesson: '3-2 القانون العام والمميز', question: 'إذا كان المميز < 0، فما نوع جذور المعادلة التربيعية؟', options: ['جذران حقيقيان مختلفان', 'جذر حقيقي مكرر', 'جذران مركبان (غير حقيقيين)', 'لا توجد جذور'], answer: 2, explain: 'عندما يكون المميز سالبًا، الجذران مركبان (غير حقيقيين) ومتقارنان.' },
+  { lesson: '3-2 القانون العام والمميز', question: 'ما مجموع جذري المعادلة <span class="math">2x² - 8x + 6 = 0</span>؟', options: ['2', '4', '6', '8'], answer: 1, explain: 'مجموع الجذرين = -b/a = -(-8)/2 = 4.' },
+  { lesson: '3-2 القانون العام والمميز', question: 'ما حاصل ضرب جذري المعادلة <span class="math">x² - 7x + 12 = 0</span>؟', options: ['7', '-7', '12', '-12'], answer: 2, explain: 'حاصل ضرب الجذرين = c/a = 12/1 = 12.' },
+  { lesson: '3-2 القانون العام والمميز', question: 'ما المميز للمعادلة <span class="math">3x² + 2x - 1 = 0</span>؟', options: ['4', '10', '16', '-8'], answer: 2, explain: 'المميز = b² - 4ac = 4 - 4(3)(-1) = 4 + 12 = 16.' },
+  { lesson: '3-2 القانون العام والمميز', question: 'إذا كان المميز = 25 للمعادلة التربيعية، فما عدد ونوع الجذور؟', options: ['جذر حقيقي مكرر', 'جذران حقيقيان مختلفان', 'جذران مركبان', 'لا جذور'], answer: 1, explain: 'المميز موجب (25 > 0)، إذن هناك جذران حقيقيان مختلفان.' },
+
+  // ===== 3-4 قسمة كثيرات الحدود (7 أسئلة) =====
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'عند قسمة <span class="math">x² - 5x + 6</span> على <span class="math">(x - 2)</span>، ما الباقي؟', options: ['0', '1', '2', '6'], answer: 0, explain: 'نعوض x = 2: 4 - 10 + 6 = 0، فالباقي = 0 (نظرية الباقي).' },
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'ما ناتج قسمة <span class="math">(x² - 9)</span> على <span class="math">(x - 3)</span>؟', options: ['x + 3', 'x - 3', 'x² + 3', 'x - 9'], answer: 0, explain: 'x² - 9 = (x-3)(x+3)، إذن (x²-9)/(x-3) = x + 3.' },
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'حسب نظرية الباقي، ما الباقي عند قسمة <span class="math">f(x) = x³ - 2x + 1</span> على <span class="math">(x - 1)</span>؟', options: ['0', '1', '-1', '2'], answer: 0, explain: 'نعوض x = 1: 1 - 2 + 1 = 0، فالباقي = 0.' },
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'متى يكون <span class="math">(x - a)</span> عاملاً لكثيرة الحدود <span class="math">f(x)</span>؟', options: ['عندما f(a) = 1', 'عندما f(a) = 0', 'عندما f(a) = a', 'عندما f(0) = a'], answer: 1, explain: 'حسب نظرية العامل: (x - a) عامل لـ f(x) إذا وفقط إذا كان f(a) = 0.' },
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'ما الباقي عند قسمة <span class="math">x² + 3x + 2</span> على <span class="math">(x + 1)</span>؟', options: ['0', '1', '2', '-1'], answer: 0, explain: 'نعوض x = -1: 1 - 3 + 2 = 0، فالباقي = 0.' },
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'ما ناتج قسمة <span class="math">(x² - 4x + 4)</span> على <span class="math">(x - 2)</span>؟', options: ['x - 2', 'x + 2', 'x² - 2', 'x - 4'], answer: 0, explain: 'x² - 4x + 4 = (x-2)²، إذن (x-2)²/(x-2) = x - 2.' },
+  { lesson: '3-4 قسمة كثيرات الحدود', question: 'إذا كان <span class="math">f(3) = 0</span>، فأيّ مما يلي عامل لـ <span class="math">f(x)</span>؟', options: ['(x + 3)', '(x - 3)', '(x - 0)', '(3x - 1)'], answer: 1, explain: 'حسب نظرية العامل: إذا كان f(3) = 0، فإن (x - 3) عامل لـ f(x).' }
+];
+
+/* ============ حالة اللعبة ============ */
+let state = {
+  currentQuestionIndex: 0,
+  totalQuestions: 36,
+  students: [],
+  correct: 0,
+  wrong: 0,
+  customAnswered: false
+};
+
+/* ============ التنقل ============ */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+/* ============ شاشة الاسم ============ */
+const nameInput = document.getElementById('nameInput');
+nameInput.addEventListener('input', () => {
+  soundType();
+  document.getElementById('nameError').textContent = '';
+});
+nameInput.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') { e.preventDefault(); submitName(); }
+});
+
+document.getElementById('submitNameBtn').addEventListener('click', submitName);
+
+function submitName() {
+  const name = nameInput.value.trim();
+  if (name.length < 2) {
+    document.getElementById('nameError').textContent = '✏️ اكتبي اسمك كاملًا من فضلكِ';
+    nameInput.focus();
+    return;
+  }
+  soundClick();
+  loadCustomQuestion(name);
+  showScreen('customQuestionScreen');
+}
+
+/* ============ السؤال المخصص ============ */
+function loadCustomQuestion(studentName) {
+  const cq = allQuestions[state.currentQuestionIndex];
+  
+  document.getElementById('customPlayerName').textContent = '🌟 ' + studentName + ' 🌟';
+  document.getElementById('lessonTag').textContent = '📘 ' + cq.lesson;
+  document.getElementById('customQuestionText').innerHTML = cq.question;
+  
+  const optBox = document.getElementById('customOptions');
+  optBox.innerHTML = '';
+  cq.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'custom-option';
+    btn.textContent = opt;
+    btn.addEventListener('click', () => selectCustomAnswer(i, cq, studentName));
+    optBox.appendChild(btn);
+  });
+  
+  document.getElementById('customFeedback').classList.remove('show', 'correct', 'wrong');
+  document.getElementById('customFeedback').innerHTML = '';
+  document.getElementById('continueBtn').style.display = 'none';
+  state.customAnswered = false;
+}
+
+function selectCustomAnswer(idx, cq, studentName) {
+  if (state.customAnswered) return;
+  state.customAnswered = true;
+  
+  const opts = document.querySelectorAll('.custom-option');
+  const isCorrect = idx === cq.answer;
+  
+  opts.forEach((o, i) => {
+    o.style.pointerEvents = 'none';
+    if (i === cq.answer) o.classList.add('selected');
+    else if (i === idx && !isCorrect) o.classList.add('wrong-pick');
+  });
+  
+  const feedback = document.getElementById('customFeedback');
+  feedback.classList.remove('correct', 'wrong');
+  
+  let mainMsg = '';
+  let explainHtml = '';
+  
+  if (isCorrect) {
+    mainMsg = getRandom(praisePhrases)(studentName);
+    explainHtml = `<div class="explain">📘 <b>التوضيح:</b> ${cq.explain}</div>`;
+    feedback.classList.add('correct');
+    soundCorrect();
+    fireConfetti(40);
+    state.correct++;
+    state.students.push({ name: studentName, correct: true });
+  } else {
+    mainMsg = getRandom(funnyPhrases)(studentName);
+    explainHtml = `<div class="explain">📘 <b>الإجابة الصحيحة:</b> ${cq.options[cq.answer]}<br><b>التوضيح:</b> ${cq.explain}</div>`;
+    feedback.classList.add('wrong');
+    soundWrong();
+    state.wrong++;
+    state.students.push({ name: studentName, correct: false });
+  }
+  
+  feedback.innerHTML = `<span class="main-msg">${mainMsg}</span>${explainHtml}`;
+  feedback.classList.add('show');
+  
+  const continueBtn = document.getElementById('continueBtn');
+  if (state.currentQuestionIndex >= state.totalQuestions - 1) {
+    continueBtn.textContent = 'عرض النتيجة النهائية 🏆';
+  } else {
+    continueBtn.textContent = 'الطالبة التالية ←';
+  }
+  continueBtn.style.display = 'inline-block';
+}
+
+document.getElementById('continueBtn').addEventListener('click', () => {
+  soundClick();
+  state.currentQuestionIndex++;
+  
+  if (state.currentQuestionIndex >= state.totalQuestions) {
+    showFinalScreen();
+  } else {
+    nameInput.value = '';
+    document.getElementById('questionCounter').textContent = `السؤال ${state.currentQuestionIndex + 1} من ${state.totalQuestions}`;
+    showScreen('nameScreen');
+    nameInput.focus();
+  }
+});
+
+/* ============ شاشة النهاية ============ */
+function showFinalScreen() {
+  showScreen('finalScreen');
+  
+  document.getElementById('finalCorrect').textContent = state.correct;
+  document.getElementById('finalWrong').textContent = state.wrong;
+  const percent = state.totalQuestions > 0 ? Math.round((state.correct/state.totalQuestions)*100) : 0;
+  document.getElementById('finalPercent').textContent = percent + '%';
+  
+  const listDiv = document.getElementById('studentsList');
+  listDiv.innerHTML = '<h3>📋 قائمة الطالبات</h3>';
+  state.students.forEach((student, i) => {
+    const item = document.createElement('div');
+    item.className = 'student-item ' + (student.correct ? 'correct' : 'wrong');
+    item.innerHTML = `
+      <span class="name">${i+1}. ${student.name}</span>
+      <span class="result">${student.correct ? '✅' : '❌'}</span>
+    `;
+    listDiv.appendChild(item);
+  });
+  
+  soundWin();
+  fireConfetti(120);
+  setTimeout(()=>fireConfetti(80), 1000);
+  setTimeout(()=>fireConfetti(80), 2000);
+}
+
+/* ============ إعادة التحدي ============ */
+document.getElementById('restartBtn').addEventListener('click', () => {
+  location.reload();
+});
+
+/* ============ دالة مساعدة ============ */
+function getRandom(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+
+/* ============ تهيئة ============ */
+document.getElementById('questionCounter').textContent = `السؤال 1 من ${state.totalQuestions}`;
+</script>
+</body>
+</html>
